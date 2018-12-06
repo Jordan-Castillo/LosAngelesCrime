@@ -21,7 +21,7 @@ object crimeTransformer {
 
     Logger.getLogger("org").setLevel(Level.OFF)
     Logger.getLogger("akka").setLevel(Level.OFF)
-    val conf = new SparkConf().setAppName("NameOfApp").setMaster("local[4]")
+    val conf = new SparkConf().setAppName("crimeTransformer").setMaster("local[4]")
     val sc = new SparkContext(conf)
 //    val pw = new PrintWriter(new File("D:\\Eclipse Workspace\\LosAngelesCrime\\src\\FixedData\\crime_LA.csv"))
 //    29 commas ordinarily
@@ -34,14 +34,15 @@ object crimeTransformer {
       .map(line => ((line.split(",")(line.split(",").size - 2), line.split(",")(line.split(",").size - 1)), line))
       .filter(_._1._1.length > 1)
       .filter(_._1._2.length > 1)
-//      .map({case ((long, lat), line) => ((long.substring(2), lat.substring(0, lat.size - 2)), line)})
-
       .map({case ((long, lat), line) => ((parseDouble(long.substring(2)), parseDouble(lat.substring(0, lat.size - 2))), line)})
       .filter(_._1._1 != None)
       .filter(_._1._2 != None)
       .map({case ((Some (lat), Some (long)), line) => (((lat.toDouble * 10).round / 10.0, (long.toDouble * 10).round / 10.0), line)})
+
+
+      
       .groupByKey()
-//      .join(incomeLines).count()
+      .join(incomeLines).count()
 
     println(crimeLines)
 //    crimeLines.take(2).foreach(println(_))
