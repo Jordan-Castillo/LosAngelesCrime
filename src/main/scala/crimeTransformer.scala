@@ -23,9 +23,6 @@ object crimeTransformer {
     Logger.getLogger("akka").setLevel(Level.OFF)
     val conf = new SparkConf().setAppName("crimeTransformer").setMaster("local[4]")
     val sc = new SparkContext(conf)
-//    val pw = new PrintWriter(new File("D:\\Eclipse Workspace\\LosAngelesCrime\\src\\FixedData\\crime_LA.csv"))
-//    29 commas ordinarily
-//    untouched, 1872170 lines of data
     def parseDouble(s: String) = try { Some(s.toDouble) } catch { case _: Throwable => None }
 
     val incomeLines = sc.textFile("D:\\Eclipse Workspace\\LosAngelesCrime\\src\\FixedData\\income_LA.csv")
@@ -38,16 +35,16 @@ object crimeTransformer {
       .filter(_._1._1 != None)
       .filter(_._1._2 != None)
       .map({case ((Some (lat), Some (long)), line) => (((lat.toDouble * 10).round / 10.0, (long.toDouble * 10).round / 10.0), line)})
-
-
-      
+      /**
+        MAKE CHANGES HERE, DEPENDING ON WHAT CRIME DATA YOU ARE LOOKING FOR
+      **/
       .groupByKey()
-      .join(incomeLines).count()
+      .join(incomeLines)
 
-    println(crimeLines)
+
+      println(crimeLines)
 //    crimeLines.take(2).foreach(println(_))
 //    crimeLines.foreach(println(_))
-//    pw.close()
 
   }
 }
