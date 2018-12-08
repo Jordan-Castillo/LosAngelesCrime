@@ -3,3 +3,4 @@ target/
 .idea/
 src/Data/
 src/FixedData/
+resources/crime.csv
