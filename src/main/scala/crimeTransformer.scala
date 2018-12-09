@@ -24,7 +24,6 @@ object crimeTransformer {
     val conf = new SparkConf().setAppName("crimeTransformer").setMaster("local[4]")
     val sc = new SparkContext(conf)
 
-
 //    29 commas ordinarily
 //    untouched, 1872170 lines of data
     def parseDouble(s: String) = try { if(s.toDouble != 0.0) Some(s.toDouble) else None } catch { case _: Throwable => None }
@@ -95,6 +94,7 @@ object crimeTransformer {
 
     val rounded = (x * 100).round
     return (rounded - (rounded % 5)) / 100.0
+
 
     /*val y = (BigDecimal(x).setScale(2, BigDecimal.RoundingMode.HALF_DOWN) * 100).toInt
     val z = BigDecimal(x).setScale(2, BigDecimal.RoundingMode.HALF_DOWN)
