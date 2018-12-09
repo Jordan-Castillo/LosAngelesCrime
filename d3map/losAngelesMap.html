@@ -79,10 +79,6 @@
       ];
 
       // Update the projection to use computed scale & translate.
-      console.log("LA Bounds")
-      console.log(laBounds);
-      console.log("LA Scale and Translate")
-      console.log(laScale, laTranslate)
       laProjection.scale(laScale)
                   .translate(laTranslate);
 
@@ -113,7 +109,7 @@
           .attr('x', function(d) { return laProjection([+d.longitude - 0.1, +d.latitude + 0.1])[0]; })
           .attr('y', function(d) { return laProjection([+d.longitude - 0.1, +d.latitude + 0.1])[1]; })
           .attr('width', 45)
-          .attr('height', 45)
+          .attr('height', 55)
           .attr('opacity', 0.8)
           .attr('transform-origin', function(d) { return "" + laProjection([+d.longitude - 0.1, +d.latitude + 0.1])[0] 
             + "px " + laProjection([+d.longitude - 0.1, +d.latitude + 0.1])[1] + "px";})
@@ -166,7 +162,6 @@
             .style("text-anchor", "end")
             .text("axis title");
       });
-      //console.log(data);
     }
   </script>
 </body>
