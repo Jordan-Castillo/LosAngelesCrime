@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<head>
+  <meta charset="utf-8">
+  <script src="https://d3js.org/d3.v4.min.js"></script>
+  <script src="https://d3js.org/topojson.v2.min.js"></script>
+  <script src="d3-tip.js"></script>
+  <style>
+    body { margin:0;position:fixed;top:0;right:0;bottom:0;left:0; }
+  path {
+    stroke: gray;
+    fill: none;
+  }
+  .d3-tip {
+    line-height: 1;
+    font-weight: bold;
+    padding: 12px;
+    background: rgba(0, 0, 0, 0.8);
+    color: #fff;
+    border-radius: 2px;
+  }
+
+  /* Creates a small triangle extender for the tooltip */
+  .d3-tip:after {
+    box-sizing: border-box;
+    display: inline;
+    font-size: 10px;
+    width: 100%;
+    line-height: 1;
+    color: rgba(0, 0, 0, 0.8);
+    content: "\25BC";
+    position: absolute;
+    text-align: center;
+  }
+
+  /* Style northward tooltips differently */
+  .d3-tip.n:after {
+    margin: -1px 0 0 0;
+    top: 100%;
+    left: 0;
+  }
+  </style>
+</head>
+
+<body>
+  <script>
+    const width = 960;
+    const height = 960;
+    const svg = d3.select('body').append('svg')
+      .attr('id', 'mapArea')
+      .attr('height', width)
+      .attr('width', height);
+
+    d3.queue()
+        .defer(d3.json, 'la.json')
+      .await(render)
+
+    function render(error, la) {
+      if (error) return console.warn(error);
+
+      // Create a unit projection.
+      const laProjection = d3.geoAlbers()
+                              .scale(1)
+                              .translate([0, 0]);
+
+      // Create a path generator                              
+      const path = d3.geoPath()
+                        .projection(laProjection);
+
+      // Compute the bounds of a feature of interest, 
+      // then derive scale & translate.
+      const laBounds = path.bounds(la);
+      const laScale = .95 / Math.max(
+                (laBounds[1][0] - laBounds[0][0]) / width,
+                (laBounds[1][1] - laBounds[0][1]) / height
+              );
+      const laTranslate = [
+        (width - laScale * (laBounds[1][0] + laBounds[0][0])) / 2, 
+        (height - laScale * (laBounds[1][1] + laBounds[0][1])) / 2
+      ];
+
+      // Update the projection to use computed scale & translate.
+      console.log("LA Bounds")
+      console.log(laBounds);
+      console.log("LA Scale and Translate")
+      console.log(laScale, laTranslate)
+      laProjection.scale(laScale)
+                  .translate(laTranslate);
+
+      var laMap = svg.append('path')
+          .datum(la)
+          .attr('d', path);
+
+      d3.csv("./crimeDesc_Income.csv", function(coords) {
+        console.log(coords);
+        var color = d3.scaleLinear()
+        .domain([30000, 150000])
+        .range([d3.rgb('#FFF500'), d3.rgb("#007AFF")]);
+
+        var tip = d3.tip()
+          .attr('class', 'd3-tip')
+          .html(function(d) { return "Crime: " + d.crime; })
+
+        var vis = d3.select('#mapArea')
+          .call(tip);
+
+        d3.select('#mapArea').call(tip);
+
+        d3.select('#mapArea').selectAll('rect')
+          .append('rect')
+          .data(coords)
+          .enter()
+          .append('rect')
+          .attr('x', function(d) { return laProjection([+d.longitude - 0.1, +d.latitude + 0.1])[0]; })
+          .attr('y', function(d) { return laProjection([+d.longitude - 0.1, +d.latitude + 0.1])[1]; })
+          .attr('width', 45)
+          .attr('height', 45)
+          .attr('opacity', 0.8)
+          .attr('transform-origin', function(d) { return "" + laProjection([+d.longitude - 0.1, +d.latitude + 0.1])[0] 
+            + "px " + laProjection([+d.longitude - 0.1, +d.latitude + 0.1])[1] + "px";})
+          .attr('transform', 'rotate(14)')
+          .attr('fill', function(d) { return color(+d.income)})
+          .on('mouseover', tip.show)
+          .on('mouseout', tip.hide);
+
+          var legend = d3.select("#mapArea").append("defs")
+            .append("svg:linearGradient")
+            .attr("id", "gradient")
+            .attr("x1", "0%")
+            .attr("y1", "100%")
+            .attr("x2", "100%")
+            .attr("y2", "100%")
+            .attr("spreadMethod", "pad");
+
+          legend.append("stop")
+            .attr("offset", "0%")
+            .attr("stop-color", d3.rgb('#FFF500'))
+            .attr("stop-opacity", 0.8);
+
+          legend.append("stop")
+            .attr("offset", "100%")
+            .attr("stop-color", d3.rgb("#007AFF"))
+            .attr("stop-opacity", 0.8);
+
+          d3.select("#mapArea").append("rect")
+            .attr("width", 300)
+            .attr("height", 30)
+            .style("fill", "url(#gradient)")
+            .attr("transform", "translate(600,20)");
+
+          var y = d3.scaleLinear()
+            .range([0, 300])
+            .domain([30000, 150000]);
+
+          var yAxis = d3.axisBottom()
+            .scale(y)
+            .ticks(7);
+
+          d3.select("#mapArea").append("g")
+            .attr("class", "y axis")
+            .attr("transform", "translate(600,50)")
+            .call(yAxis)
+            .append("text")
+            .attr("transform", "rotate(-90)")
+            .attr("y", 0)
+            .attr("dy", ".71em")
+            .style("text-anchor", "end")
+            .text("axis title");
+      });
+      //console.log(data);
+    }
+  </script>
+</body>

@@ -4,3 +4,4 @@ target/
 src/Data/
 src/FixedData/
 resources/crime.csv
+.DS_STORE
