@@ -44,9 +44,9 @@ object crimeTransformer {
       .filter(_._1._1 != None)
       .filter(_._1._2 != None)
       // if we want to map to lower tenth:
-      //.map({case ((Some (long), Some (lat)), line) => (((long.toDouble * 10).round / 10.0, (lat.toDouble * 10).round / 10.0), line)})
+      .map({case ((Some (long), Some (lat)), line) => (((long.toDouble * 10).round / 10.0, (lat.toDouble * 10).round / 10.0), line)})
       // if we want to map to lower 0.05
-      .map({case ((Some (long), Some (lat)), line) => ((mutateCoords(long), mutateCoords(lat)), line)})
+      //.map({case ((Some (long), Some (lat)), line) => ((mutateCoords(long), mutateCoords(lat)), line)})
 
 
     // now have all the ((lat, long), lineWithDetail) in the RDD
@@ -56,45 +56,56 @@ object crimeTransformer {
 
 
 
-    // crimeCodes has each (long, lat) pair with each (code, count) pair for every code found in that grid square
-    val crimeCode = crimeLines.map({case (coord, line) => (coord, line.split(",")(7))})
+    // crimeCodes has each (long, lat) pair with each (codeDesc, count) pair for every code found in that grid square
+    val crimeCode = crimeLines.map({case (coord, line) => (coord, line.split(",")(8))})
       .filter({case (coord, code) => code != ""})
       // have ((lat, long), crimeCode)
       .map((_, 1))
       .reduceByKey(_+_)
+      .sortBy(r => r._2, false)
       .map({case (((lat, long), code), count) => ((lat, long), (code, count))})
+      .groupByKey()  // comment out for OPTION 2
       .sortByKey()
     // ((lat, long), (crimeCode, crimeCount)) sorted by lat and long
 
+
+    // OPTION 1: IF WE WANT THE TOP CRIME DESCRIPTION FOR EACH SQUARE
     //    val pw1 = new PrintWriter(new File("D:\\Eclipse Workspace\\LosAngelesCrime\\src\\FixedData\\crime_Codes.csv"))
     val pw1 = new PrintWriter(new File("resources/crime_Codes.csv"))
-    crimeCode.collect().foreach({case ((long, lat), (code, count)) =>
-      pw1.write(long.toString + ", " + lat.toString + ", " + code + ": " + count + "\n")})
+    crimeCode.collect().foreach({case ((long, lat), iter ) =>
+      if(iter.head._2 > 1)
+        pw1.write(long.toString + ", " + lat.toString + ", " + iter.head._1 + ": " + iter.head._2 + "\n")})
     pw1.close()
 
+    // OPTION 2: IF WE WANT ALL CRIME DESCRIPTION FOR EACH GRID SQUARE
+//    val pw1 = new PrintWriter(new File("resources/crime_Codes.csv"))
+//    crimeCode.collect().foreach({case ((long, lat), (code, count)) =>
+//      pw1.write(long.toString + ", " + lat.toString + ", " + code + ": " + count + "\n")})
+//    pw1.close()
 
-    // numCodes has number of crimes in each (long, lat) pair
-    val numCrimes = crimeLines.map({case (coord, line) => coord})
-      // have (lat, long)
-      .map((_, 1))
-      // now ((lat, long), 1)
-      .reduceByKey(_+_)
-      // get number of crimes per grid square
-      .join(incomeLines)
-      .filter(_._2._1 > 100)
-      // filter any grid squares with < 100 crimes
-      .sortBy(_._2._2)
-      // sort by income
 
-    // val pw2 = new PrintWriter(new File("D:\\Eclipse Workspace\\LosAngelesCrime\\src\\FixedData\\crime_Counts.csv"))
-    val pw2 = new PrintWriter(new File("resources/crime_Counts.csv"))
-
-    numCrimes.collect.foreach({case ((long, lat), (count, income)) =>
-      pw2.write(long.toString + ", " + lat.toString + ":: Income: " + income + ", Count:" + count + "\n")
-      // pw2.write(income + "," + count + "\n")})   // FOR CSV FILE USAGE
-
-    })
-    pw2.close()
+//    // numCodes has number of crimes in each (long, lat) pair
+//    val numCrimes = crimeLines.map({case (coord, line) => coord})
+//      // have (lat, long)
+//      .map((_, 1))
+//      // now ((lat, long), 1)
+//      .reduceByKey(_+_)
+//      // get number of crimes per grid square
+//      .join(incomeLines)
+//      .filter(_._2._1 > 100)
+//      // filter any grid squares with < 100 crimes
+//      .sortBy(_._2._2)
+//      // sort by income
+//
+//    // val pw2 = new PrintWriter(new File("D:\\Eclipse Workspace\\LosAngelesCrime\\src\\FixedData\\crime_Counts.csv"))
+//    val pw2 = new PrintWriter(new File("resources/crime_Counts.csv"))
+//
+//    numCrimes.collect.foreach({case ((long, lat), (count, income)) =>
+//      pw2.write(long.toString + ", " + lat.toString + ":: Income: " + income + ", Count:" + count + "\n")
+//      // pw2.write(income + "," + count + "\n")})   // FOR CSV FILE USAGE
+//
+//    })
+//    pw2.close()
 
 
   }

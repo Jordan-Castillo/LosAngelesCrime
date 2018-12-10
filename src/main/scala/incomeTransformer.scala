@@ -37,9 +37,9 @@ object incomeTransformer {
         coords.split(",")(0).substring(1).toDouble,
         coords.split(", ")(1).dropRight(1).toDouble)})
       // if we want to map to lower tenth:
-      //.map({case (income, long, lat) => (((long * 10).round / 10.0,(lat * 10).round / 10.0), income)})
+      .map({case (income, long, lat) => (((long * 10).round / 10.0,(lat * 10).round / 10.0), income)})
       // if we want to map to lower 0.05:
-      .map({case (income, long, lat) => ((mutateCoords(long), mutateCoords(lat)), income)})
+      //.map({case (income, long, lat) => ((mutateCoords(long), mutateCoords(lat)), income)})
       .aggregateByKey((0,0))((x, y) => (x._1 + y, x._2 + 1), (x, y) => (x._1 + y._1, x._2 + y._2))
       // aggregate the income of every similar lat/long pair
       .sortBy(_._1)
